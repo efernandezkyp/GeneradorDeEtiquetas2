@@ -15,13 +15,15 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import { PageSection } from '../../../shared/components/PageSection';
 import type { Label } from '../../../shared/types/api';
-import { downloadTextFile, printText } from '../../../shared/utils/fileActions';
+import { downloadBlobFile, downloadTextFile, printText } from '../../../shared/utils/fileActions';
 import { LabelZplDialog } from '../components/LabelZplDialog';
 import {
+  bulkCreateLabels,
   deleteLabel,
   downloadLabelZpl,
   duplicateLabel,
@@ -29,10 +31,43 @@ import {
   listLabels,
   type LabelFiltersState,
 } from '../api/labelsApi';
+import type { LabelFormValues } from '../schemas/labelSchemas';
+
+function stringifyCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string') return value;
+  return String(value);
+}
+
+function parseProductsCell(value: string): LabelFormValues['products'] {
+  const raw = value.trim();
+  if (!raw) {
+    return [];
+  }
+
+  const items = raw
+    .split(/[;\n\r]+/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return items
+    .map((item) => {
+      const [qtyRaw, ...nameParts] = item.split('|').map((part) => part.trim());
+      const quantity = Number(qtyRaw);
+      const productName = nameParts.join('|').trim();
+      if (!productName || !Number.isFinite(quantity) || quantity <= 0) {
+        return null;
+      }
+      return { productName, quantity };
+    })
+    .filter((item): item is { productName: string; quantity: number } => Boolean(item));
+}
 
 export function LabelsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [filters, setFilters] = useState<LabelFiltersState>({
     externalReference: '',
     receiver: '',
@@ -46,6 +81,11 @@ export function LabelsPage() {
     zpl: '',
   });
   const [pageError, setPageError] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    failed: Array<{ index: number; message: string }>;
+    skipped: Array<{ index: number; message: string }>;
+  } | null>(null);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
 
   const labelsQuery = useQuery({
@@ -137,23 +177,163 @@ export function LabelsPage() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const rows = [
+      ['externalReference', 'reason', 'receiver', 'phone', 'address', 'products'],
+      [
+        'REF-0001',
+        'Envio',
+        'Juan Perez',
+        '1131552649',
+        'Calle Falsa 123, Buenos Aires',
+        '1|Producto A;2|Producto B',
+      ],
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Etiquetas');
+
+    const helpRows = [
+      ['Campo', 'Descripción'],
+      ['externalReference', 'Referencia externa (texto)'],
+      ['reason', 'Motivo (texto)'],
+      ['receiver', 'Destinatario (texto)'],
+      ['phone', 'Teléfono (texto)'],
+      ['address', 'Dirección (texto)'],
+      ['products', 'Lista de productos: cantidad|nombre;cantidad|nombre'],
+    ];
+    const helpSheet = XLSX.utils.aoa_to_sheet(helpRows);
+    XLSX.utils.book_append_sheet(workbook, helpSheet, 'Ayuda');
+
+    const fileName = 'template-etiquetas.xlsx';
+    const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([output], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    downloadBlobFile(fileName, blob);
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      setPageError(null);
+      setImportResult(null);
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+
+      const skipped: Array<{ index: number; message: string }> = [];
+      const payload: LabelFormValues[] = [];
+
+      rawRows.forEach((row, index) => {
+        const externalReference = stringifyCell(row.externalReference).trim();
+        const reason = stringifyCell(row.reason).trim();
+        const receiver = stringifyCell(row.receiver).trim();
+        const phone = stringifyCell(row.phone).trim();
+        const address = stringifyCell(row.address).trim();
+        const productsCell = stringifyCell(row.products);
+        const products = parseProductsCell(productsCell);
+
+        const missing: string[] = [];
+        if (!externalReference) missing.push('externalReference');
+        if (!reason) missing.push('reason');
+        if (!receiver) missing.push('receiver');
+        if (!phone) missing.push('phone');
+        if (!address) missing.push('address');
+        if (products.length === 0) missing.push('products');
+
+        if (missing.length > 0) {
+          skipped.push({
+            index: index + 2,
+            message: `Faltan campos: ${missing.join(', ')}`,
+          });
+          return;
+        }
+
+        payload.push({
+          externalReference,
+          reason,
+          receiver,
+          phone,
+          address,
+          products,
+        });
+      });
+
+      if (payload.length === 0) {
+        setImportResult({ created: 0, failed: [], skipped });
+        return;
+      }
+
+      const result = await bulkCreateLabels(payload);
+      setImportResult({ ...result, skipped });
+      await queryClient.invalidateQueries({ queryKey: ['labels'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    } catch {
+      setPageError('No fue posible procesar el archivo. Verifica que sea el template y que tenga una hoja con encabezados.');
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <PageSection
       title="Etiquetas"
       subtitle="Creacion, edicion, duplicado, descarga e impresion de etiquetas ZPL"
       actions={
-        <Button
-          variant="contained"
-          onClick={() => {
-            navigate('/labels/new');
-          }}
-        >
-          Nueva etiqueta
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            style={{ display: 'none' }}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                void handleImportFile(file);
+              }
+            }}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => {
+              handleDownloadTemplate();
+            }}
+          >
+            Descargar template
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+          >
+            Importar excel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              navigate('/labels/new');
+            }}
+          >
+            Nueva etiqueta
+          </Button>
+        </Stack>
       }
     >
       {pageError ? <Alert severity="error">{pageError}</Alert> : null}
       {labelsQuery.isError ? <Alert severity="error">No fue posible cargar las etiquetas.</Alert> : null}
+      {importResult ? (
+        <Alert severity={importResult.failed.length > 0 || importResult.skipped.length > 0 ? 'warning' : 'success'}>
+          Importación: creadas {importResult.created}. Fallidas {importResult.failed.length}. Omitidas{' '}
+          {importResult.skipped.length}.
+        </Alert>
+      ) : null}
 
       <Card>
         <CardContent>

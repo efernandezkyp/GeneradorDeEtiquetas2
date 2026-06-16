@@ -237,6 +237,25 @@ export class LabelService {
     return label;
   }
 
+  async bulkCreate(dtos: CreateLabelDto[], user: TokenPayload, ipAddress?: string) {
+    TenantGuard.assertCanManageLabels(user);
+
+    let created = 0;
+    const failed: Array<{ index: number; message: string }> = [];
+
+    for (let index = 0; index < dtos.length; index += 1) {
+      try {
+        await this.create(dtos[index], user, ipAddress);
+        created += 1;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        failed.push({ index, message });
+      }
+    }
+
+    return { created, failed };
+  }
+
   async update(id: string, dto: UpdateLabelDto, user: TokenPayload, ipAddress?: string) {
     TenantGuard.assertCanManageLabels(user);
 

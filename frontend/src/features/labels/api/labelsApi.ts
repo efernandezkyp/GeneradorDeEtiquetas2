@@ -38,6 +38,17 @@ export async function createLabel(payload: LabelFormValues): Promise<Label> {
   return response.data.data;
 }
 
+export async function bulkCreateLabels(payload: Array<LabelFormValues>): Promise<{
+  created: number;
+  failed: Array<{ index: number; message: string }>;
+}> {
+  const response = await httpClient.post<ApiResponse<{ created: number; failed: Array<{ index: number; message: string }> }>>(
+    '/labels/bulk',
+    { labels: payload },
+  );
+  return response.data.data;
+}
+
 export async function updateLabel(id: string, payload: LabelFormValues): Promise<Label> {
   const response = await httpClient.put<ApiResponse<Label>>(`/labels/${id}`, payload);
   return response.data.data;

@@ -14,6 +14,7 @@ import {
   resetPasswordSchema,
   createLabelSchema,
   updateLabelSchema,
+  bulkCreateLabelsSchema,
   labelFiltersSchema,
 } from '../../application/dto';
 
@@ -135,6 +136,13 @@ router.post(
   requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
   validateBody(createLabelSchema),
   labelController.create,
+);
+router.post(
+  '/labels/bulk',
+  authMiddleware,
+  requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
+  validateBody(bulkCreateLabelsSchema),
+  labelController.bulkCreate,
 );
 router.put(
   '/labels/:id',

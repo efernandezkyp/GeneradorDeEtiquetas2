@@ -1,5 +1,14 @@
-﻿export function downloadTextFile(fileName: string, content: string): void {
+export function downloadTextFile(fileName: string, content: string): void {
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadBlobFile(fileName: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;

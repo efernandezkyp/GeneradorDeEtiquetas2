@@ -77,6 +77,10 @@ export const createLabelSchema = z.object({
 
 export const updateLabelSchema = createLabelSchema.partial();
 
+export const bulkCreateLabelsSchema = z.object({
+  labels: z.array(createLabelSchema).min(1, 'Debe enviar al menos una etiqueta'),
+});
+
 export const labelFiltersSchema = z.object({
   externalReference: z.string().optional(),
   receiver: z.string().optional(),

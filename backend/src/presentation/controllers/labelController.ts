@@ -40,6 +40,11 @@ export class LabelController {
     sendSuccess(res, label, 201);
   });
 
+  bulkCreate = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.labelService.bulkCreate(req.body.labels, req.user!, getClientIp(req));
+    sendSuccess(res, result, 201);
+  });
+
   update = asyncHandler(async (req: Request, res: Response) => {
     const label = await this.labelService.update(
       this.getId(req),
