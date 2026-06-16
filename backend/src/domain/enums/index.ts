@@ -1,0 +1,15 @@
+export enum Role {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+  ASESOR = 'ASESOR',
+}
+
+export enum AuditAction {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  PASSWORD_RESET = 'PASSWORD_RESET',
+  DEACTIVATE = 'DEACTIVATE',
+}

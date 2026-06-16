@@ -1,0 +1,8 @@
+backend/node_modules
+backend/dist
+backend/prisma/dev.db
+backend/prisma/test.db
+backend/prisma/*.db
+backend/test.db
+frontend/node_modules
+frontend/dist

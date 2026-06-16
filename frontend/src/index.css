@@ -1,0 +1,19 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f7fb;
+}
+
+a {
+  color: inherit;
+}
+
+pre {
+  margin: 0;
+}
