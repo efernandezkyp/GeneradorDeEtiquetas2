@@ -64,6 +64,34 @@ export interface Label {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  downloaded?: boolean;
+  downloadCount?: number;
+  lastDownloadedAt?: string | null;
+}
+
+export interface LabelHistoryChange {
+  field: string;
+  label: string;
+  from: string;
+  to: string;
+}
+
+export interface LabelHistoryEntry {
+  id: string;
+  action: string;
+  createdAt: string;
+  userId: string | null;
+  userName: string;
+  userEmail: string | null;
+  ipAddress: string | null;
+  summary: string;
+  changes: LabelHistoryChange[];
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface LabelDetail {
+  label: Label;
+  history: LabelHistoryEntry[];
 }
 
 export interface DashboardStats {
@@ -80,6 +108,7 @@ export interface PaginatedLabels {
 
 export interface LabelFilters {
   externalReference?: string;
+  receiver?: string;
   createdBy?: string;
   startDate?: string;
   endDate?: string;

@@ -1,6 +1,7 @@
 import type { AuthUser } from '../types/api';
 
 const STORAGE_KEY = 'zpl-auth-session';
+const SESSION_EVENT = 'zpl-auth-session-changed';
 
 export interface StoredSession {
   accessToken: string | null;
@@ -29,8 +30,15 @@ export function readStoredSession(): StoredSession {
 
 export function storeSession(session: StoredSession): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  window.dispatchEvent(new Event(SESSION_EVENT));
 }
 
 export function clearStoredSession(): void {
   localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new Event(SESSION_EVENT));
+}
+
+export function onSessionChange(handler: () => void): () => void {
+  window.addEventListener(SESSION_EVENT, handler);
+  return () => window.removeEventListener(SESSION_EVENT, handler);
 }

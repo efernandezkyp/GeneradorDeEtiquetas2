@@ -1,9 +1,10 @@
 import { httpClient } from '../../../shared/api/httpClient';
-import type { ApiResponse, Label, PaginatedLabels } from '../../../shared/types/api';
+import type { ApiResponse, Label, LabelDetail, PaginatedLabels } from '../../../shared/types/api';
 import type { LabelFormValues } from '../schemas/labelSchemas';
 
 export interface LabelFiltersState {
   externalReference: string;
+  receiver: string;
   createdBy: string;
   startDate: string;
   endDate: string;
@@ -12,6 +13,7 @@ export interface LabelFiltersState {
 export async function listLabels(filters: LabelFiltersState): Promise<PaginatedLabels> {
   const params = new URLSearchParams();
   if (filters.externalReference) params.append('externalReference', filters.externalReference);
+  if (filters.receiver) params.append('receiver', filters.receiver);
   if (filters.createdBy) params.append('createdBy', filters.createdBy);
   if (filters.startDate) params.append('startDate', new Date(filters.startDate).toISOString());
   if (filters.endDate) params.append('endDate', new Date(filters.endDate).toISOString());
@@ -23,6 +25,11 @@ export async function listLabels(filters: LabelFiltersState): Promise<PaginatedL
 
 export async function getLabel(id: string): Promise<Label> {
   const response = await httpClient.get<ApiResponse<Label>>(`/labels/${id}`);
+  return response.data.data;
+}
+
+export async function getLabelDetail(id: string): Promise<LabelDetail> {
+  const response = await httpClient.get<ApiResponse<LabelDetail>>(`/labels/${id}/detail`);
   return response.data.data;
 }
 
@@ -53,4 +60,11 @@ export async function duplicateLabel(id: string): Promise<Label> {
 export async function getLabelZpl(id: string): Promise<string> {
   const response = await httpClient.get<ApiResponse<{ zpl: string }>>(`/labels/${id}/zpl`);
   return response.data.data.zpl;
+}
+
+export async function downloadLabelZpl(id: string, bulk = false): Promise<string> {
+  const response = await httpClient.get(`/labels/${id}/download${bulk ? '?bulk=true' : ''}`, {
+    responseType: 'text',
+  });
+  return response.data as string;
 }

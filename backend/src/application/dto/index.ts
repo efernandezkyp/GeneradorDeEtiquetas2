@@ -79,6 +79,7 @@ export const updateLabelSchema = createLabelSchema.partial();
 
 export const labelFiltersSchema = z.object({
   externalReference: z.string().optional(),
+  receiver: z.string().optional(),
   createdBy: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),

@@ -123,6 +123,12 @@ router.get(
   requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
   labelController.findById,
 );
+router.get(
+  '/labels/:id/detail',
+  authMiddleware,
+  requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
+  labelController.getDetail,
+);
 router.post(
   '/labels',
   authMiddleware,

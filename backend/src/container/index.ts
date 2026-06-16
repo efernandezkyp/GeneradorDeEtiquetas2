@@ -1,6 +1,7 @@
 import { PrismaCompanyRepository } from '../infrastructure/repositories/companyRepository';
 import { PrismaUserRepository } from '../infrastructure/repositories/userRepository';
 import { PrismaLabelRepository } from '../infrastructure/repositories/labelRepository';
+import { PrismaLabelHistoryRepository } from '../infrastructure/repositories/labelHistoryRepository';
 import { PrismaAuditLogRepository } from '../infrastructure/repositories/auditLogRepository';
 import { PrismaRefreshTokenRepository } from '../infrastructure/repositories/refreshTokenRepository';
 import { JwtTokenService } from '../infrastructure/auth/tokenService';
@@ -22,6 +23,7 @@ import { createAuthMiddleware } from '../presentation/middlewares/authMiddleware
 const companyRepository = new PrismaCompanyRepository();
 const userRepository = new PrismaUserRepository();
 const labelRepository = new PrismaLabelRepository();
+const labelHistoryRepository = new PrismaLabelHistoryRepository();
 const auditLogRepository = new PrismaAuditLogRepository();
 const refreshTokenRepository = new PrismaRefreshTokenRepository();
 const tokenService = new JwtTokenService();
@@ -45,7 +47,12 @@ const userService = new UserService(
   passwordHasher,
   auditService,
 );
-const labelService = new LabelService(companyRepository, labelRepository, zplTemplateEngine, auditService);
+const labelService = new LabelService(
+  companyRepository,
+  labelHistoryRepository,
+  labelRepository,
+  zplTemplateEngine,
+);
 const dashboardService = new DashboardService(
   companyRepository,
   userRepository,

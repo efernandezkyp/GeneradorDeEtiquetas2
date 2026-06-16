@@ -1,7 +1,4 @@
-import {
-  IAuditLogRepository,
-  CreateAuditLogData,
-} from '../../domain/interfaces';
+import { IAuditLogRepository, CreateAuditLogData } from '../../domain/interfaces';
 
 export class AuditService {
   constructor(private readonly auditLogRepository: IAuditLogRepository) {}

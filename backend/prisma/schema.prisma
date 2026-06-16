@@ -17,6 +17,7 @@ enum AuditAction {
   CREATE
   UPDATE
   DELETE
+  DOWNLOAD
   LOGIN
   LOGOUT
   PASSWORD_RESET
@@ -118,4 +119,40 @@ model AuditLog {
   @@index([companyId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model LabelHistoryEvent {
+  id           String   @id
+  labelId      String
+  companyId    String
+  userId       String?
+  eventType    String
+  summary      String
+  changesJson  String   @default("[]")
+  metadataJson String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([labelId])
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("label_history_events")
+}
+
+model LabelDownloadEvent {
+  id           String   @id
+  labelId      String
+  companyId    String
+  userId       String?
+  downloadType String
+  metadataJson String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([labelId])
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("label_download_events")
 }

@@ -80,6 +80,7 @@ export interface UpdateLabelData {
 export interface LabelFilters {
   companyId?: string;
   externalReference?: string;
+  receiver?: string;
   createdBy?: string;
   startDate?: Date;
   endDate?: Date;
@@ -95,6 +96,56 @@ export interface CreateAuditLogData {
   entityId?: string;
   details?: string;
   ipAddress?: string;
+}
+
+export interface LabelHistoryChange {
+  field: string;
+  label: string;
+  from: string;
+  to: string;
+}
+
+export interface CreateLabelHistoryEventData {
+  labelId: string;
+  companyId: string;
+  userId?: string;
+  eventType: 'CREATE' | 'UPDATE' | 'DELETE';
+  summary: string;
+  changes?: LabelHistoryChange[];
+  metadata?: Record<string, unknown>;
+  ipAddress?: string;
+  createdAt?: Date;
+}
+
+export interface CreateLabelDownloadEventData {
+  labelId: string;
+  companyId: string;
+  userId?: string;
+  downloadType: 'single' | 'bulk';
+  metadata?: Record<string, unknown>;
+  ipAddress?: string;
+  createdAt?: Date;
+}
+
+export interface LabelHistoryEntry {
+  id: string;
+  labelId: string;
+  userId: string | null;
+  userName: string;
+  userEmail: string | null;
+  companyId: string | null;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'DOWNLOAD';
+  summary: string;
+  changes: LabelHistoryChange[];
+  metadata: Record<string, unknown> | null;
+  ipAddress: string | null;
+  createdAt: Date;
+}
+
+export interface LabelDownloadSummary {
+  labelId: string;
+  downloadCount: number;
+  lastDownloadedAt: Date | null;
 }
 
 export interface ICompanyRepository {
@@ -128,6 +179,13 @@ export interface ILabelRepository {
 
 export interface IAuditLogRepository {
   create(data: CreateAuditLogData): Promise<AuditLogEntity>;
+}
+
+export interface ILabelHistoryRepository {
+  createEvent(data: CreateLabelHistoryEventData): Promise<void>;
+  createDownload(data: CreateLabelDownloadEventData): Promise<void>;
+  getLabelHistory(labelId: string, companyId?: string): Promise<LabelHistoryEntry[]>;
+  getLabelDownloadSummaries(labelIds: string[], companyId?: string): Promise<LabelDownloadSummary[]>;
 }
 
 export interface IRefreshTokenRepository {

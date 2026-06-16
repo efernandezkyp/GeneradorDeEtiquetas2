@@ -8,6 +8,7 @@ export enum AuditAction {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
   DELETE = 'DELETE',
+  DOWNLOAD = 'DOWNLOAD',
   LOGIN = 'LOGIN',
   LOGOUT = 'LOGOUT',
   PASSWORD_RESET = 'PASSWORD_RESET',

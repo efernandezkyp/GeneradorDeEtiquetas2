@@ -7,9 +7,10 @@ interface LabelZplDialogProps {
   labelId: string | null;
   zpl: string;
   onClose: () => void;
+  onDownload?: () => Promise<void> | void;
 }
 
-export function LabelZplDialog({ open, labelId, zpl, onClose }: LabelZplDialogProps) {
+export function LabelZplDialog({ open, labelId, zpl, onClose, onDownload }: LabelZplDialogProps) {
   const fileName = `label-${labelId ?? 'preview'}.zpl`;
 
   return (
@@ -21,7 +22,12 @@ export function LabelZplDialog({ open, labelId, zpl, onClose }: LabelZplDialogPr
       <DialogActions>
         <Button onClick={onClose}>Cerrar</Button>
         <Button
-          onClick={() => {
+          onClick={async () => {
+            if (onDownload) {
+              await onDownload();
+              return;
+            }
+
             downloadTextFile(fileName, zpl);
           }}
         >

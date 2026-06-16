@@ -3,6 +3,7 @@ import {
   clearStoredSession,
   readStoredSession,
   storeSession,
+  onSessionChange,
   type StoredSession,
 } from '../../../shared/auth/tokenStorage';
 import type { AuthUser } from '../../../shared/types/api';
@@ -26,6 +27,12 @@ function emptySession(): StoredSession {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<StoredSession>(() => readStoredSession());
   const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(readStoredSession().accessToken));
+
+  useEffect(() => {
+    return onSessionChange(() => {
+      setSession(readStoredSession());
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;

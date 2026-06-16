@@ -41,6 +41,9 @@ export class PrismaLabelRepository implements ILabelRepository {
     if (filters.externalReference) {
       where.externalReference = { contains: filters.externalReference };
     }
+    if (filters.receiver) {
+      where.receiver = { contains: filters.receiver };
+    }
     if (filters.createdBy) {
       where.createdBy = filters.createdBy;
     }

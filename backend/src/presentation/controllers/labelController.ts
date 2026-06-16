@@ -30,6 +30,11 @@ export class LabelController {
     sendSuccess(res, label);
   });
 
+  getDetail = asyncHandler(async (req: Request, res: Response) => {
+    const detail = await this.labelService.getDetail(this.getId(req), req.user!);
+    sendSuccess(res, detail);
+  });
+
   create = asyncHandler(async (req: Request, res: Response) => {
     const label = await this.labelService.create(req.body, req.user!, getClientIp(req));
     sendSuccess(res, label, 201);
@@ -61,7 +66,13 @@ export class LabelController {
   });
 
   downloadZpl = asyncHandler(async (req: Request, res: Response) => {
-    const zpl = await this.labelService.getZpl(this.getId(req), req.user!);
+    const downloadType = req.query.bulk === 'true' ? 'bulk' : 'single';
+    const zpl = await this.labelService.downloadZpl(
+      this.getId(req),
+      req.user!,
+      getClientIp(req),
+      downloadType,
+    );
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', `attachment; filename="label-${req.params.id}.zpl"`);
     res.send(zpl);
