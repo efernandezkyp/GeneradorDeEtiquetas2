@@ -406,7 +406,7 @@ export function LabelsPage() {
                     checked={areAllRowsSelected}
                     indeterminate={isPartiallySelected}
                     onChange={toggleSelectAll}
-                    inputProps={{ 'aria-label': 'Seleccionar todas las etiquetas' }}
+                    slotProps={{ input: { 'aria-label': 'Seleccionar todas las etiquetas' } }}
                   />
                 </TableCell>
                 <TableCell>Referencia</TableCell>
@@ -425,7 +425,7 @@ export function LabelsPage() {
                     <Checkbox
                       checked={selectedLabelIds.includes(label.id)}
                       onChange={() => toggleLabelSelection(label.id)}
-                      inputProps={{ 'aria-label': `Seleccionar etiqueta ${label.externalReference}` }}
+                      slotProps={{ input: { 'aria-label': `Seleccionar etiqueta ${label.externalReference}` } }}
                     />
                   </TableCell>
                   <TableCell>{label.externalReference}</TableCell>
