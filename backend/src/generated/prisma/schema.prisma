@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  ASESOR
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  DOWNLOAD
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  DEACTIVATE
+}
+
+model Company {
+  id                        String   @id @default(cuid())
+  name                      String
+  code                      String   @unique
+  defaultOriginCompany      String   @default("")
+  defaultDestinationCompany String   @default("")
+  active                    Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  users  User[]
+  labels Label[]
+
+  @@map("companies")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  firstName    String
+  lastName     String
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  role         Role     @default(ASESOR)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company       Company        @relation(fields: [companyId], references: [id])
+  labels        Label[]        @relation("CreatedLabels")
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([companyId])
+  @@map("users")
+}
+
+model Label {
+  id                 String   @id @default(cuid())
+  companyId          String
+  externalReference  String
+  reason             String
+  productDescription String
+  productsJson       String   @default("[]")
+  address            String
+  phone              String
+  receiver           String
+  originCompany      String
+  destinationCompany String
+  zplContent         String
+  createdBy          String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  creator User    @relation("CreatedLabels", fields: [createdBy], references: [id])
+
+  @@index([companyId])
+  @@index([externalReference])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@map("labels")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  companyId String?
+  action    AuditAction
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model LabelHistoryEvent {
+  id           String   @id
+  labelId      String
+  companyId    String
+  userId       String?
+  eventType    String
+  summary      String
+  changesJson  String   @default("[]")
+  metadataJson String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([labelId])
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("label_history_events")
+}
+
+model LabelDownloadEvent {
+  id           String   @id
+  labelId      String
+  companyId    String
+  userId       String?
+  downloadType String
+  metadataJson String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([labelId])
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("label_download_events")
+}

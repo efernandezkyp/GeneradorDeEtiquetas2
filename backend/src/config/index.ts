@@ -26,7 +26,7 @@ function parseCorsOrigins(value: string): string | string[] {
 export const config = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parseInt(process.env.PORT ?? '3001', 10),
-  databaseUrl: requireEnv('DATABASE_URL', 'file:./dev.db'),
+  databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET', 'dev-jwt-secret-change-me'),
     expiresIn: process.env.JWT_EXPIRES_IN ?? '15m',
