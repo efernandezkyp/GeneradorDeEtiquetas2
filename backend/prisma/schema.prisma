@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
 }
-//Vercel adjustment
+
 
 datasource db {
   provider  = "postgresql"
