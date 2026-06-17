@@ -1,6 +1,6 @@
-﻿import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { clearStoredSession, readStoredSession, storeSession } from '../auth/tokenStorage';
-import { env } from '../config/env';
+import { buildApiUrl, env } from '../config/env';
 import type { ApiResponse, AuthTokens } from '../types/api';
 
 const httpClient = axios.create({
@@ -13,6 +13,11 @@ const httpClient = axios.create({
 let refreshPromise: Promise<string | null> | null = null;
 
 httpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (config.url?.startsWith('/')) {
+    config.url = buildApiUrl(config.url);
+    config.baseURL = undefined;
+  }
+
   const session = readStoredSession();
   if (session.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
@@ -35,7 +40,7 @@ httpClient.interceptors.response.use(
 
     if (!refreshPromise) {
       refreshPromise = axios
-        .post<ApiResponse<Omit<AuthTokens, 'user'>>>(`${env.apiUrl}/auth/refresh`, {
+        .post<ApiResponse<Omit<AuthTokens, 'user'>>>(buildApiUrl('/auth/refresh'), {
           refreshToken: session.refreshToken,
         })
         .then((response) => {

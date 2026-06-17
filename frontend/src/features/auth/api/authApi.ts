@@ -1,5 +1,5 @@
 import { httpClient } from '../../../shared/api/httpClient';
-import { env } from '../../../shared/config/env';
+import { buildApiUrl } from '../../../shared/config/env';
 import type { ApiResponse, AuthTokens, AuthUser } from '../../../shared/types/api';
 
 export interface LoginPayload {
@@ -22,5 +22,5 @@ export async function logoutRequest(refreshToken: string): Promise<void> {
 }
 
 export function getGoogleAuthUrl(): string {
-  return `${env.apiUrl}/auth/google`;
+  return buildApiUrl('/auth/google');
 }
