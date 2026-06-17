@@ -69,7 +69,7 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
         ${JSON.stringify(data.changes ?? [])},
         ${data.metadata ? JSON.stringify(data.metadata) : null},
         ${data.ipAddress ?? null},
-        ${(data.createdAt ?? new Date()).toISOString()}
+        ${data.createdAt ?? new Date()}
       )
     `;
   }
@@ -86,7 +86,7 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
         ${data.downloadType},
         ${data.metadata ? JSON.stringify(data.metadata) : null},
         ${data.ipAddress ?? null},
-        ${(data.createdAt ?? new Date()).toISOString()}
+        ${data.createdAt ?? new Date()}
       )
     `;
   }
