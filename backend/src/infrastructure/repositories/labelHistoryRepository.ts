@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client';
 import {
   CreateLabelDownloadEventData,
@@ -55,46 +56,46 @@ function toDate(value: Date | string): Date {
 
 export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
   async createEvent(data: CreateLabelHistoryEventData): Promise<void> {
-    await prisma.$executeRawUnsafe(
-      `
+    await prisma.$executeRaw`
       INSERT INTO "label_history_events"
         ("id", "labelId", "companyId", "userId", "eventType", "summary", "changesJson", "metadataJson", "ipAddress", "createdAt")
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      randomUUID(),
-      data.labelId,
-      data.companyId,
-      data.userId ?? null,
-      data.eventType,
-      data.summary,
-      JSON.stringify(data.changes ?? []),
-      data.metadata ? JSON.stringify(data.metadata) : null,
-      data.ipAddress ?? null,
-      (data.createdAt ?? new Date()).toISOString(),
-    );
+      VALUES (
+        ${randomUUID()},
+        ${data.labelId},
+        ${data.companyId},
+        ${data.userId ?? null},
+        ${data.eventType},
+        ${data.summary},
+        ${JSON.stringify(data.changes ?? [])},
+        ${data.metadata ? JSON.stringify(data.metadata) : null},
+        ${data.ipAddress ?? null},
+        ${(data.createdAt ?? new Date()).toISOString()}
+      )
+    `;
   }
 
   async createDownload(data: CreateLabelDownloadEventData): Promise<void> {
-    await prisma.$executeRawUnsafe(
-      `
+    await prisma.$executeRaw`
       INSERT INTO "label_download_events"
         ("id", "labelId", "companyId", "userId", "downloadType", "metadataJson", "ipAddress", "createdAt")
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      randomUUID(),
-      data.labelId,
-      data.companyId,
-      data.userId ?? null,
-      data.downloadType,
-      data.metadata ? JSON.stringify(data.metadata) : null,
-      data.ipAddress ?? null,
-      (data.createdAt ?? new Date()).toISOString(),
-    );
+      VALUES (
+        ${randomUUID()},
+        ${data.labelId},
+        ${data.companyId},
+        ${data.userId ?? null},
+        ${data.downloadType},
+        ${data.metadata ? JSON.stringify(data.metadata) : null},
+        ${data.ipAddress ?? null},
+        ${(data.createdAt ?? new Date()).toISOString()}
+      )
+    `;
   }
 
   async getLabelHistory(labelId: string, companyId?: string): Promise<LabelHistoryEntry[]> {
-    const lifecycleRows = (await prisma.$queryRawUnsafe(
-      `
+    const lifecycleCompanyFilter = companyId
+      ? Prisma.sql`AND h."companyId" = ${companyId}`
+      : Prisma.empty;
+    const lifecycleRows = (await prisma.$queryRaw`
       SELECT
         h."id" as id,
         h."labelId" as labelId,
@@ -113,16 +114,14 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
         h."createdAt" as createdAt
       FROM "label_history_events" h
       LEFT JOIN "users" u ON u."id" = h."userId"
-      WHERE h."labelId" = ?
-        AND (? IS NULL OR h."companyId" = ?)
-      `,
-      labelId,
-      companyId ?? null,
-      companyId ?? null,
-    )) as LabelHistoryRow[];
+      WHERE h."labelId" = ${labelId}
+      ${lifecycleCompanyFilter}
+    `) as LabelHistoryRow[];
 
-    const downloadRows = (await prisma.$queryRawUnsafe(
-      `
+    const downloadCompanyFilter = companyId
+      ? Prisma.sql`AND d."companyId" = ${companyId}`
+      : Prisma.empty;
+    const downloadRows = (await prisma.$queryRaw`
       SELECT
         d."id" as id,
         d."labelId" as labelId,
@@ -144,13 +143,9 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
         d."createdAt" as createdAt
       FROM "label_download_events" d
       LEFT JOIN "users" u ON u."id" = d."userId"
-      WHERE d."labelId" = ?
-        AND (? IS NULL OR d."companyId" = ?)
-      `,
-      labelId,
-      companyId ?? null,
-      companyId ?? null,
-    )) as LabelHistoryRow[];
+      WHERE d."labelId" = ${labelId}
+      ${downloadCompanyFilter}
+    `) as LabelHistoryRow[];
 
     return [...lifecycleRows, ...downloadRows]
       .map((row) => ({
@@ -175,22 +170,19 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
       return [];
     }
 
-    const placeholders = labelIds.map(() => '?').join(', ');
-    const rows = (await prisma.$queryRawUnsafe(
-      `
+    const companyFilter = companyId
+      ? Prisma.sql`AND d."companyId" = ${companyId}`
+      : Prisma.empty;
+    const rows = (await prisma.$queryRaw`
       SELECT
         d."labelId" as labelId,
         COUNT(*) as downloadCount,
         MAX(d."createdAt") as lastDownloadedAt
       FROM "label_download_events" d
-      WHERE d."labelId" IN (${placeholders})
-        AND (? IS NULL OR d."companyId" = ?)
+      WHERE d."labelId" IN (${Prisma.join(labelIds)})
+      ${companyFilter}
       GROUP BY d."labelId"
-      `,
-      ...labelIds,
-      companyId ?? null,
-      companyId ?? null,
-    )) as Array<{ labelId: string; downloadCount: number | bigint; lastDownloadedAt: Date | string | null }>;
+    `) as Array<{ labelId: string; downloadCount: number | bigint; lastDownloadedAt: Date | string | null }>;
 
     return rows.map((row) => ({
       labelId: row.labelId,
