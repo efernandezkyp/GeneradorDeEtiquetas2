@@ -11,6 +11,9 @@ import { logger } from './infrastructure/logging/logger';
 
 const app = express();
 
+// Render y otros proveedores pasan la IP real via X-Forwarded-*.
+app.set('trust proxy', config.nodeEnv === 'production' ? 1 : false);
+
 app.use(helmet());
 app.use(
   cors({
