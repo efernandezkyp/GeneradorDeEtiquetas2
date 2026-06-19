@@ -6,6 +6,7 @@ import {
   LabelFilters,
 } from '../../domain/interfaces';
 import { LabelEntity } from '../../domain/entities';
+import { LabelStatus } from '../../domain/enums';
 
 function mapLabel(label: {
   id: string;
@@ -21,6 +22,9 @@ function mapLabel(label: {
   destinationCompany: string;
   zplContent: string;
   createdBy: string;
+  status: LabelStatus;
+  scannedBy: string | null;
+  scannedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }): LabelEntity {

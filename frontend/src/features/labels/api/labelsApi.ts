@@ -74,6 +74,7 @@ export async function getLabelZpl(id: string): Promise<string> {
 }
 
 export interface DownloadZplResponse {
+  id: string;
   zplContent: string;
   downloaded: boolean;
   downloadCount: number;

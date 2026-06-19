@@ -13,6 +13,12 @@ enum Role {
   SUPER_ADMIN
   ADMIN
   ASESOR
+  PICKER
+}
+
+enum LabelStatus {
+  PENDIENTE
+  DESPACHADA
 }
 
 enum AuditAction {
@@ -65,12 +71,12 @@ model User {
 }
 
 model Label {
-  id                 String   @id @default(cuid())
+  id                 String      @id @default(cuid())
   companyId          String
   externalReference  String
   reason             String
   productDescription String
-  productsJson       String   @default("[]")
+  productsJson       String      @default("[]")
   address            String
   phone              String
   receiver           String
@@ -78,8 +84,11 @@ model Label {
   destinationCompany String
   zplContent         String
   createdBy          String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  status             LabelStatus @default(PENDIENTE)
+  scannedBy          String?
+  scannedAt          DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
   creator User    @relation("CreatedLabels", fields: [createdBy], references: [id])
@@ -88,6 +97,8 @@ model Label {
   @@index([externalReference])
   @@index([createdBy])
   @@index([createdAt])
+  @@index([status])
+  @@index([companyId, status])
   @@map("labels")
 }
 

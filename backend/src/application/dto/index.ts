@@ -91,6 +91,10 @@ export const labelFiltersSchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
+export const scanLabelSchema = z.object({
+  qrData: z.string().min(1, 'Datos QR requeridos'),
+});
+
 export type LoginDto = z.infer<typeof loginSchema>;
 export type CreateCompanyDto = z.infer<typeof createCompanySchema>;
 export type UpdateCompanyDto = z.infer<typeof updateCompanySchema>;
@@ -99,3 +103,4 @@ export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 export type CreateLabelDto = z.infer<typeof createLabelSchema>;
 export type UpdateLabelDto = z.infer<typeof updateLabelSchema>;
 export type LabelFiltersDto = z.infer<typeof labelFiltersSchema>;
+export type ScanLabelDto = z.infer<typeof scanLabelSchema>;

@@ -5,7 +5,7 @@ import {
   AuditLogEntity,
   RefreshTokenEntity,
 } from '../entities';
-import { Role, AuditAction } from '../enums';
+import { Role, AuditAction, LabelStatus } from '../enums';
 
 export interface LabelProductInput {
   productName: string;
@@ -50,6 +50,7 @@ export interface UpdateUserData {
 }
 
 export interface CreateLabelData {
+  id?: string;
   companyId: string;
   externalReference: string;
   reason: string;
@@ -62,6 +63,7 @@ export interface CreateLabelData {
   destinationCompany: string;
   zplContent: string;
   createdBy: string;
+  status?: LabelStatus;
 }
 
 export interface UpdateLabelData {
@@ -75,6 +77,9 @@ export interface UpdateLabelData {
   originCompany?: string;
   destinationCompany?: string;
   zplContent?: string;
+  status?: LabelStatus;
+  scannedBy?: string;
+  scannedAt?: Date;
 }
 
 export interface LabelFilters {
@@ -109,7 +114,7 @@ export interface CreateLabelHistoryEventData {
   labelId: string;
   companyId: string;
   userId?: string;
-  eventType: 'CREATE' | 'UPDATE' | 'DELETE';
+  eventType: 'CREATE' | 'UPDATE' | 'DELETE' | 'SCAN';
   summary: string;
   changes?: LabelHistoryChange[];
   metadata?: Record<string, unknown>;
@@ -134,7 +139,7 @@ export interface LabelHistoryEntry {
   userName: string;
   userEmail: string | null;
   companyId: string | null;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'DOWNLOAD';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'DOWNLOAD' | 'SCAN';
   summary: string;
   changes: LabelHistoryChange[];
   metadata: Record<string, unknown> | null;
@@ -197,6 +202,7 @@ export interface IRefreshTokenRepository {
 
 export interface IZplTemplateEngine {
   generate(data: {
+    id: string;
     externalReference: string;
     reason: string;
     products: LabelProductInput[];

@@ -4,6 +4,7 @@ const roleLabels: Record<Role, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Admin',
   ASESOR: 'Asesor',
+  PICKER: 'Picker',
 };
 
 interface RoleBadgeProps {

@@ -1,4 +1,5 @@
-export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'ASESOR';
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'ASESOR' | 'PICKER';
+export type LabelStatus = 'PENDIENTE' | 'DESPACHADA';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -67,6 +68,9 @@ export interface Label {
   downloaded?: boolean;
   downloadCount?: number;
   lastDownloadedAt?: string | null;
+  status?: LabelStatus;
+  scannedBy?: string | null;
+  scannedAt?: string | null;
 }
 
 export interface LabelHistoryChange {

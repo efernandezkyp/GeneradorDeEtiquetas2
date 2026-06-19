@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import {
   ICompanyRepository,
   ILabelHistoryRepository,
@@ -196,7 +197,9 @@ export class LabelService {
     const products = normalizeProducts(dto.products);
     const productDescription = buildProductDescription(products);
     const productsJson = serializeProducts(products);
+    const labelId = randomUUID();
     const zplContent = this.zplEngine.generate({
+      id: labelId,
       externalReference: dto.externalReference,
       reason: dto.reason,
       products,
@@ -208,6 +211,7 @@ export class LabelService {
     });
 
     const label = await this.labelRepository.create({
+      id: labelId,
       companyId: user.companyId,
       externalReference: dto.externalReference,
       reason: dto.reason,
@@ -269,6 +273,7 @@ export class LabelService {
     const productDescription = buildProductDescription(products);
     const productsJson = serializeProducts(products);
     const zplContent = this.zplEngine.generate({
+      id: existing.id,
       externalReference: merged.externalReference,
       reason: merged.reason,
       products,
@@ -410,6 +415,7 @@ export class LabelService {
     }
     const products = normalizeProducts(dto.products);
     return this.zplEngine.generate({
+      id: 'preview',
       externalReference: dto.externalReference,
       reason: dto.reason,
       products,

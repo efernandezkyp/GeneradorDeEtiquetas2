@@ -2,6 +2,12 @@ export enum Role {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   ASESOR = 'ASESOR',
+  PICKER = 'PICKER',
+}
+
+export enum LabelStatus {
+  PENDIENTE = 'PENDIENTE',
+  DESPACHADA = 'DESPACHADA',
 }
 
 export enum AuditAction {

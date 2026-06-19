@@ -16,10 +16,11 @@ import {
   updateLabelSchema,
   bulkCreateLabelsSchema,
   labelFiltersSchema,
+  scanLabelSchema,
 } from '../../application/dto';
 
 const router = Router();
-const { authController, companyController, userController, labelController, authMiddleware } =
+const { authController, companyController, userController, labelController, pickerController, authMiddleware } =
   container;
 
 router.post('/auth/login', validateBody(loginSchema), authController.login);
@@ -31,6 +32,14 @@ router.get('/auth/google', authController.googleAuth);
 router.get('/auth/google/callback', authController.googleCallback);
 
 router.get('/dashboard', authMiddleware, labelController.getDashboard);
+
+router.post(
+  '/labels/scan',
+  authMiddleware,
+  requireRoles(Role.PICKER),
+  validateBody(scanLabelSchema),
+  pickerController.scan,
+);
 
 router.get(
   '/companies',

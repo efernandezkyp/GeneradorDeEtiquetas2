@@ -14,10 +14,12 @@ import { CompanyService } from '../application/services/companyService';
 import { UserService } from '../application/services/userService';
 import { LabelService } from '../application/services/labelService';
 import { DashboardService } from '../application/services/tenantGuard';
+import { PickerService } from '../application/services/pickerService';
 import { AuthController } from '../presentation/controllers/authController';
 import { CompanyController } from '../presentation/controllers/companyController';
 import { UserController } from '../presentation/controllers/userController';
 import { LabelController } from '../presentation/controllers/labelController';
+import { PickerController } from '../presentation/controllers/pickerController';
 import { createAuthMiddleware } from '../presentation/middlewares/authMiddleware';
 
 const companyRepository = new PrismaCompanyRepository();
@@ -59,10 +61,13 @@ const dashboardService = new DashboardService(
   labelRepository,
 );
 
+const pickerService = new PickerService(labelRepository, labelHistoryRepository);
+
 export const container = {
   authController: new AuthController(authService),
   companyController: new CompanyController(companyService),
   userController: new UserController(userService),
   labelController: new LabelController(labelService, dashboardService),
+  pickerController: new PickerController(pickerService),
   authMiddleware: createAuthMiddleware(tokenService),
 };

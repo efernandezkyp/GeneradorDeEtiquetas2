@@ -41,7 +41,7 @@ const userSchema = z.object({
   lastName: z.string().min(1, 'El apellido es obligatorio'),
   email: z.email('Email invalido'),
   password: passwordSchema.optional().or(z.literal('')),
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ASESOR']),
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ASESOR', 'PICKER']),
 });
 
 const resetPasswordSchema = z.object({
@@ -131,7 +131,7 @@ export function UsersPage() {
         lastName: selectedUser.lastName,
         email: selectedUser.email,
         password: '',
-        role: selectedUser.role,
+        role: selectedUser.role as UserFormValues['role'],
       });
       return;
     }
@@ -188,7 +188,9 @@ export function UsersPage() {
   const visibleCompanies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
 
   const roleOptions: Role[] =
-    user?.role === 'SUPER_ADMIN' ? ['SUPER_ADMIN', 'ADMIN', 'ASESOR'] : ['ADMIN', 'ASESOR'];
+    user?.role === 'SUPER_ADMIN'
+      ? ['SUPER_ADMIN', 'ADMIN', 'ASESOR', 'PICKER']
+      : ['ADMIN', 'ASESOR', 'PICKER'];
 
   return (
     <PageSection

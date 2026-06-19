@@ -1,4 +1,4 @@
-import { Role } from '../enums';
+import { Role, LabelStatus } from '../enums';
 
 export interface CompanyEntity {
   id: string;
@@ -39,6 +39,9 @@ export interface LabelEntity {
   destinationCompany: string;
   zplContent: string;
   createdBy: string;
+  status: LabelStatus;
+  scannedBy: string | null;
+  scannedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

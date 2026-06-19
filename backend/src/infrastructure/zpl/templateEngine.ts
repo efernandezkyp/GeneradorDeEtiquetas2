@@ -94,6 +94,7 @@ export class ZplTemplateEngine implements IZplTemplateEngine {
   constructor(private readonly template: string = DEFAULT_TEMPLATE) {}
 
   generate(data: {
+    id: string;
     externalReference: string;
     reason: string;
     products: LabelProductInput[];
@@ -114,14 +115,14 @@ export class ZplTemplateEngine implements IZplTemplateEngine {
     const contactLine = this.encodeFieldData(`${data.phone} - ${data.receiver}`);
     const companyLine = this.encodeFieldData(`${data.originCompany} - ${data.destinationCompany}`);
     const qrData = this.encodeFieldData(
-      `LA,REF=${data.externalReference};SELLER=${data.destinationCompany};COMPANY=${data.originCompany}`,
+      `LA,ID=${data.id};REF=${data.externalReference};SELLER=${data.destinationCompany};COMPANY=${data.originCompany}`,
     );
 
-    const reasonStartY = 270;
+    const reasonStartY = 290;
     const reasonLineHeight = 36;
     const reasonBoxHeight = 90 + Math.max(reasonLines.length - 1, 0) * reasonLineHeight;
 
-    const productsBoxY = 340 + Math.max(reasonBoxHeight - 90, 0);
+    const productsBoxY = 360 + Math.max(reasonBoxHeight - 90, 0);
     const productRowsStartY = productsBoxY + 80;
     const productRowHeight = 34;
     const productsBoxHeight = 100 + Math.max(productRows.length, 1) * productRowHeight;
@@ -159,7 +160,7 @@ export class ZplTemplateEngine implements IZplTemplateEngine {
 
 ^FO20,95^GB500,2,2^FS
 
-^FO540,20^BQN,2,6
+^FO540,10^BQN,2,6
 ^FH^FD${qrData}^FS
 
 ^CF0,22
@@ -168,10 +169,10 @@ export class ZplTemplateEngine implements IZplTemplateEngine {
 ^CF0,42
 ^FO20,150^FH^FD${externalReference}^FS
 
-^FO20,230^GB760,${reasonBoxHeight},2^FS
+^FO20,250^GB760,${reasonBoxHeight + 20},2^FS
 
 ^CF0,22
-^FO35,245^FH^FDMOTIVO^FS
+^FO35,265^FH^FDMOTIVO^FS
 
 ${renderFieldBlock(reasonLines, reasonStartY, 34, reasonLineHeight, (value) => this.encodeFieldData(value))}
 
@@ -204,6 +205,7 @@ ${renderFieldBlock(addressLines, addressStartY, 26, addressLineHeight, (value) =
   }
 
   private renderWithTemplate(data: {
+    id: string;
     externalReference: string;
     reason: string;
     products: LabelProductInput[];

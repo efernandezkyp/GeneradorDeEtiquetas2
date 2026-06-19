@@ -7,7 +7,10 @@ import { LabelDetailPage } from '../features/labels/pages/LabelDetailPage';
 import { LabelEditorPage } from '../features/labels/pages/LabelEditorPage';
 import { LabelsPage } from '../features/labels/pages/LabelsPage';
 import { UsersPage } from '../features/users/pages/UsersPage';
+import { PickerScanPage } from '../features/picker/pages/PickerScanPage';
+import { PickerHomePage } from '../features/picker/pages/PickerHomePage';
 import { ProtectedRoute } from './guards/ProtectedRoute';
+import { PickerRoute } from './guards/PickerRoute';
 
 export const appRouter = createBrowserRouter([
   {
@@ -17,6 +20,22 @@ export const appRouter = createBrowserRouter([
   {
     path: '/auth/callback',
     element: <AuthCallbackPage />,
+  },
+  {
+    path: '/picker',
+    element: (
+      <PickerRoute>
+        <PickerHomePage />
+      </PickerRoute>
+    ),
+  },
+  {
+    path: '/scan',
+    element: (
+      <PickerRoute>
+        <PickerScanPage />
+      </PickerRoute>
+    ),
   },
   {
     path: '/',
