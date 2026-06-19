@@ -98,20 +98,20 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
     const lifecycleRows = (await prisma.$queryRaw`
       SELECT
         h."id" as id,
-        h."labelId" as labelId,
-        h."userId" as userId,
+        h."labelId" as "labelId",
+        h."userId" as "userId",
         CASE
           WHEN u."id" IS NULL THEN 'Sistema'
           ELSE TRIM(COALESCE(u."firstName", '') || ' ' || COALESCE(u."lastName", ''))
-        END as userName,
-        u."email" as userEmail,
-        h."companyId" as companyId,
+        END as "userName",
+        u."email" as "userEmail",
+        h."companyId" as "companyId",
         h."eventType" as action,
         h."summary" as summary,
-        h."changesJson" as changesJson,
-        h."metadataJson" as metadataJson,
-        h."ipAddress" as ipAddress,
-        h."createdAt" as createdAt
+        h."changesJson" as "changesJson",
+        h."metadataJson" as "metadataJson",
+        h."ipAddress" as "ipAddress",
+        h."createdAt" as "createdAt"
       FROM "label_history_events" h
       LEFT JOIN "users" u ON u."id" = h."userId"
       WHERE h."labelId" = ${labelId}
@@ -124,23 +124,23 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
     const downloadRows = (await prisma.$queryRaw`
       SELECT
         d."id" as id,
-        d."labelId" as labelId,
-        d."userId" as userId,
+        d."labelId" as "labelId",
+        d."userId" as "userId",
         CASE
           WHEN u."id" IS NULL THEN 'Sistema'
           ELSE TRIM(COALESCE(u."firstName", '') || ' ' || COALESCE(u."lastName", ''))
-        END as userName,
-        u."email" as userEmail,
-        d."companyId" as companyId,
+        END as "userName",
+        u."email" as "userEmail",
+        d."companyId" as "companyId",
         'DOWNLOAD' as action,
         CASE
           WHEN d."downloadType" = 'bulk' THEN 'Descarga masiva de etiqueta'
           ELSE 'Descarga de etiqueta'
         END as summary,
-        '[]' as changesJson,
-        d."metadataJson" as metadataJson,
-        d."ipAddress" as ipAddress,
-        d."createdAt" as createdAt
+        '[]' as "changesJson",
+        d."metadataJson" as "metadataJson",
+        d."ipAddress" as "ipAddress",
+        d."createdAt" as "createdAt"
       FROM "label_download_events" d
       LEFT JOIN "users" u ON u."id" = d."userId"
       WHERE d."labelId" = ${labelId}
@@ -175,9 +175,9 @@ export class PrismaLabelHistoryRepository implements ILabelHistoryRepository {
       : Prisma.empty;
     const rows = (await prisma.$queryRaw`
       SELECT
-        d."labelId" as labelId,
-        COUNT(*) as downloadCount,
-        MAX(d."createdAt") as lastDownloadedAt
+        d."labelId" as "labelId",
+        COUNT(*) as "downloadCount",
+        MAX(d."createdAt") as "lastDownloadedAt"
       FROM "label_download_events" d
       WHERE d."labelId" IN (${Prisma.join(labelIds)})
       ${companyFilter}

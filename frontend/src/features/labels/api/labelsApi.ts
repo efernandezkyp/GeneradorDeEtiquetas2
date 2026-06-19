@@ -73,9 +73,23 @@ export async function getLabelZpl(id: string): Promise<string> {
   return response.data.data.zpl;
 }
 
+export interface DownloadZplResponse {
+  zplContent: string;
+  downloaded: boolean;
+  downloadCount: number;
+  lastDownloadedAt: string | null;
+}
+
 export async function downloadLabelZpl(id: string, bulk = false): Promise<string> {
   const response = await httpClient.get(`/labels/${id}/download${bulk ? '?bulk=true' : ''}`, {
     responseType: 'text',
   });
   return response.data as string;
+}
+
+export async function downloadLabelZplWithMeta(id: string, bulk = false): Promise<DownloadZplResponse> {
+  const response = await httpClient.get<ApiResponse<DownloadZplResponse>>(
+    `/labels/${id}/download${bulk ? '?bulk=true' : ''}`,
+  );
+  return response.data.data;
 }

@@ -353,7 +353,7 @@ export class LabelService {
     user: TokenPayload,
     ipAddress?: string,
     downloadType: 'single' | 'bulk' = 'single',
-  ): Promise<string> {
+  ): Promise<{ zplContent: string; downloaded: boolean; downloadCount: number; lastDownloadedAt: Date | null }> {
     const label = await this.findById(id, user);
 
     await this.labelHistoryRepository.createDownload({
@@ -367,7 +367,17 @@ export class LabelService {
       ipAddress,
     });
 
-    return label.zplContent;
+    const [summary] = await this.labelHistoryRepository.getLabelDownloadSummaries(
+      [id],
+      label.companyId,
+    );
+
+    return {
+      zplContent: label.zplContent,
+      downloaded: (summary?.downloadCount ?? 0) > 0,
+      downloadCount: summary?.downloadCount ?? 0,
+      lastDownloadedAt: summary?.lastDownloadedAt ?? null,
+    };
   }
 
   async getDetail(id: string, user: TokenPayload) {

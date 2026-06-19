@@ -72,15 +72,13 @@ export class LabelController {
 
   downloadZpl = asyncHandler(async (req: Request, res: Response) => {
     const downloadType = req.query.bulk === 'true' ? 'bulk' : 'single';
-    const zpl = await this.labelService.downloadZpl(
+    const result = await this.labelService.downloadZpl(
       this.getId(req),
       req.user!,
       getClientIp(req),
       downloadType,
     );
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', `attachment; filename="label-${req.params.id}.zpl"`);
-    res.send(zpl);
+    sendSuccess(res, result);
   });
 
   preview = asyncHandler(async (req: Request, res: Response) => {

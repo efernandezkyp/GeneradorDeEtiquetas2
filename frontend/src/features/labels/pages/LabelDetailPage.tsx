@@ -19,9 +19,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageSection } from '../../../shared/components/PageSection';
+import type { LabelDetail, PaginatedLabels } from '../../../shared/types/api';
 import { downloadTextFile } from '../../../shared/utils/fileActions';
 import { LabelZplDialog } from '../components/LabelZplDialog';
-import { downloadLabelZpl, getLabelDetail, getLabelZpl } from '../api/labelsApi';
+import { downloadLabelZplWithMeta, getLabelDetail, getLabelZpl } from '../api/labelsApi';
 import { parseLabelProducts } from '../utils/products';
 
 function formatDateTime(value?: string | null): string {
@@ -245,8 +246,33 @@ export function LabelDetailPage() {
         onDownload={async () => {
           try {
             setPageError(null);
-            const zpl = await downloadLabelZpl(label.id);
-            downloadTextFile(`label-${label.id}.zpl`, zpl);
+            const result = await downloadLabelZplWithMeta(label.id);
+            downloadTextFile(`label-${label.id}.zpl`, result.zplContent);
+
+            queryClient.setQueriesData<PaginatedLabels>(
+              { queryKey: ['labels'] },
+              (oldData) => {
+                if (!oldData) return oldData;
+                return {
+                  ...oldData,
+                  labels: oldData.labels.map((l) =>
+                    l.id === label.id ? { ...l, downloaded: result.downloaded, downloadCount: result.downloadCount, lastDownloadedAt: result.lastDownloadedAt } : l,
+                  ),
+                };
+              },
+            );
+
+            queryClient.setQueryData<LabelDetail>(
+              ['label-detail', label.id],
+              (oldData) => {
+                if (!oldData) return oldData;
+                return {
+                  ...oldData,
+                  label: { ...oldData.label, downloaded: result.downloaded, downloadCount: result.downloadCount, lastDownloadedAt: result.lastDownloadedAt },
+                };
+              },
+            );
+
             await queryClient.invalidateQueries({ queryKey: ['labels'] });
             await queryClient.invalidateQueries({ queryKey: ['label-detail', label.id] });
           } catch {

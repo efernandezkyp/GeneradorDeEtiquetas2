@@ -19,13 +19,13 @@ import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { PageSection } from '../../../shared/components/PageSection';
-import type { Label } from '../../../shared/types/api';
+import type { Label, PaginatedLabels } from '../../../shared/types/api';
 import { downloadBlobFile, downloadTextFile, printText } from '../../../shared/utils/fileActions';
 import { LabelZplDialog } from '../components/LabelZplDialog';
 import {
   bulkCreateLabels,
   deleteLabel,
-  downloadLabelZpl,
+  downloadLabelZplWithMeta,
   duplicateLabel,
   getLabelZpl,
   listLabels,
@@ -117,6 +117,24 @@ export function LabelsPage() {
     },
   });
 
+  const updateLabelDownloadStatus = (
+    labelId: string,
+    status: { downloaded: boolean; downloadCount: number; lastDownloadedAt: string | null },
+  ) => {
+    queryClient.setQueriesData<PaginatedLabels>(
+      { queryKey: ['labels'] },
+      (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          labels: oldData.labels.map((label) =>
+            label.id === labelId ? { ...label, ...status } : label,
+          ),
+        };
+      },
+    );
+  };
+
   const rows = useMemo(() => labelsQuery.data?.labels ?? [], [labelsQuery.data]);
   const selectedRows = useMemo(
     () => rows.filter((label) => selectedLabelIds.includes(label.id)),
@@ -162,15 +180,27 @@ export function LabelsPage() {
 
     try {
       setPageError(null);
-      const zplFiles = await Promise.all(
-        selectedRows.map(async (label) => ({
-          ...label,
-          zpl: await downloadLabelZpl(label.id, true),
-        })),
+      const results = await Promise.all(
+        selectedRows.map(async (label) => {
+          const result = await downloadLabelZplWithMeta(label.id, true);
+          return { ...label, ...result };
+        }),
       );
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      downloadTextFile(`labels-zpl-${timestamp}.txt`, buildBulkZplContent(zplFiles));
+      downloadTextFile(
+        `labels-zpl-${timestamp}.txt`,
+        buildBulkZplContent(results.map((r) => ({ ...r, zpl: r.zplContent }))),
+      );
+
+      results.forEach((result) => {
+        updateLabelDownloadStatus(result.id, {
+          downloaded: result.downloaded,
+          downloadCount: result.downloadCount,
+          lastDownloadedAt: result.lastDownloadedAt,
+        });
+      });
+
       await queryClient.invalidateQueries({ queryKey: ['labels'] });
     } catch {
       setPageError('No fue posible descargar el archivo TXT con las etiquetas seleccionadas.');
@@ -479,9 +509,18 @@ export function LabelsPage() {
                       <Button
                         size="small"
                         onClick={async () => {
-                          const zpl = await downloadLabelZpl(label.id);
-                          downloadTextFile(`label-${label.id}.zpl`, zpl);
-                          await queryClient.invalidateQueries({ queryKey: ['labels'] });
+                          try {
+                            const result = await downloadLabelZplWithMeta(label.id);
+                            downloadTextFile(`label-${label.id}.zpl`, result.zplContent);
+                            updateLabelDownloadStatus(result.id, {
+                              downloaded: result.downloaded,
+                              downloadCount: result.downloadCount,
+                              lastDownloadedAt: result.lastDownloadedAt,
+                            });
+                            await queryClient.invalidateQueries({ queryKey: ['labels'] });
+                          } catch {
+                            setPageError('No fue posible descargar la etiqueta.');
+                          }
                         }}
                       >
                         Descargar
@@ -522,9 +561,18 @@ export function LabelsPage() {
             return;
           }
 
-          const zpl = await downloadLabelZpl(zplDialog.labelId);
-          downloadTextFile(`label-${zplDialog.labelId}.zpl`, zpl);
-          await queryClient.invalidateQueries({ queryKey: ['labels'] });
+          try {
+            const result = await downloadLabelZplWithMeta(zplDialog.labelId);
+            downloadTextFile(`label-${zplDialog.labelId}.zpl`, result.zplContent);
+            updateLabelDownloadStatus(zplDialog.labelId, {
+              downloaded: result.downloaded,
+              downloadCount: result.downloadCount,
+              lastDownloadedAt: result.lastDownloadedAt,
+            });
+            await queryClient.invalidateQueries({ queryKey: ['labels'] });
+          } catch {
+            setPageError('No fue posible descargar la etiqueta.');
+          }
         }}
         onClose={() => setZplDialog({ open: false, labelId: null, zpl: '' })}
       />
