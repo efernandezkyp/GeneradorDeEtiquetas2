@@ -22,13 +22,16 @@ function mapLabel(label: {
   destinationCompany: string;
   zplContent: string;
   createdBy: string;
-  status: LabelStatus;
+  status: string;
   scannedBy: string | null;
   scannedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }): LabelEntity {
-  return { ...label };
+  return {
+    ...label,
+    status: label.status as LabelStatus,
+  };
 }
 
 export class PrismaLabelRepository implements ILabelRepository {
