@@ -10,11 +10,32 @@ export interface ScanResult {
   scannedAt: string;
 }
 
+interface StoragePayload {
+  date: string;
+  labels: ScanResult[];
+}
+
 function loadHistory(): ScanResult[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as ScanResult[];
+    
+    const parsed = JSON.parse(raw);
+    
+    if (Array.isArray(parsed)) {
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    }
+    
+    const payload = parsed as StoragePayload;
+    const today = new Date().toDateString();
+    
+    if (payload.date !== today) {
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    }
+    
+    return payload.labels || [];
   } catch {
     return [];
   }
@@ -22,7 +43,11 @@ function loadHistory(): ScanResult[] {
 
 function saveHistory(labels: ScanResult[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(labels));
+    const payload: StoragePayload = {
+      date: new Date().toDateString(),
+      labels,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
     // storage full or unavailable
   }
