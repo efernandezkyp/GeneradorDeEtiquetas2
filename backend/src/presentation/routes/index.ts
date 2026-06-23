@@ -40,6 +40,12 @@ router.post(
   validateBody(scanLabelSchema),
   pickerController.scan,
 );
+router.get(
+  '/labels/pending-dispatch',
+  authMiddleware,
+  requireRoles(Role.PICKER),
+  pickerController.getPendingDispatch,
+);
 
 router.get(
   '/companies',

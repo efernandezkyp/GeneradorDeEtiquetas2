@@ -110,12 +110,15 @@ export interface PaginatedLabels {
   total: number;
 }
 
-export interface LabelFilters {
-  externalReference?: string;
-  receiver?: string;
-  createdBy?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
+export interface PendingDispatchLabel {
+  id: string;
+  externalReference: string;
+  products: LabelProduct[];
+  downloadCount: number;
+  lastDownloadedAt: string | null;
+}
+
+export interface PendingDispatchResponse {
+  total: number;
+  labels: PendingDispatchLabel[];
 }

@@ -2,9 +2,31 @@ import {
   ILabelRepository,
   ILabelHistoryRepository,
   TokenPayload,
+  LabelProductInput,
 } from '../../domain/interfaces';
 import { LabelStatus } from '../../domain/enums';
 import { NotFoundError, ValidationError } from '../../domain/errors';
+import type { LabelEntity } from '../../domain/entities';
+
+function parseLabelProducts(label: Pick<LabelEntity, 'productsJson' | 'productDescription'>): LabelProductInput[] {
+  if (label.productsJson) {
+    try {
+      const parsed = JSON.parse(label.productsJson) as LabelProductInput[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((p) => ({
+          productName: p.productName.trim(),
+          quantity: p.quantity,
+        }));
+      }
+    } catch {
+      // fallback
+    }
+  }
+  if (label.productDescription.trim()) {
+    return [{ productName: label.productDescription.trim(), quantity: 1 }];
+  }
+  return [];
+}
 
 interface ParsedQrData {
   id: string;
@@ -72,6 +94,40 @@ export class PickerService {
       status: LabelStatus.DESPACHADA,
       alreadyDispatched: false,
     };
+  }
+
+  async getPendingDispatchLabels(user: TokenPayload) {
+    const labels = await this.labelRepository.findByCompany(user.companyId);
+    const pending = labels.filter((l) => l.status === LabelStatus.PENDIENTE);
+
+    if (pending.length === 0) {
+      return { total: 0, labels: [] };
+    }
+
+    const summaries = await this.labelHistoryRepository.getLabelDownloadSummaries(
+      pending.map((l) => l.id),
+      user.companyId,
+    );
+    const summaryMap = new Map(summaries.map((s) => [s.labelId, s]));
+
+    const dispatched = pending
+      .filter((l) => {
+        const summary = summaryMap.get(l.id);
+        return summary && summary.downloadCount > 0;
+      })
+      .map((l) => {
+        const summary = summaryMap.get(l.id)!;
+        const products = parseLabelProducts(l);
+        return {
+          id: l.id,
+          externalReference: l.externalReference,
+          products,
+          downloadCount: summary.downloadCount,
+          lastDownloadedAt: summary.lastDownloadedAt,
+        };
+      });
+
+    return { total: dispatched.length, labels: dispatched };
   }
 
   private parseQrData(qrData: string): ParsedQrData | null {

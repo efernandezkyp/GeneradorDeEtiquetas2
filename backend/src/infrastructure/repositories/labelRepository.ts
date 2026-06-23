@@ -63,6 +63,9 @@ export class PrismaLabelRepository implements ILabelRepository {
         (where.createdAt as Record<string, Date>).lte = filters.endDate;
       }
     }
+    if (filters.status) {
+      where.status = filters.status;
+    }
 
     const [labels, total] = await Promise.all([
       prisma.label.findMany({
@@ -111,5 +114,13 @@ export class PrismaLabelRepository implements ILabelRepository {
         ...(companyId ? { companyId } : {}),
       },
     });
+  }
+
+  async findByCompany(companyId: string): Promise<LabelEntity[]> {
+    const labels = await prisma.label.findMany({
+      where: { companyId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return labels.map(mapLabel);
   }
 }

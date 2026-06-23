@@ -54,6 +54,8 @@ app.use(errorHandler);
 
 export { app };
 
+
+
 export function startServer(): void {
   app.listen(config.port, () => {
     logger.info(`Servidor iniciado en puerto ${config.port}`, { env: config.nodeEnv });
@@ -63,3 +65,5 @@ export function startServer(): void {
 if (require.main === module) {
   startServer();
 }
+
+// Restart trigger

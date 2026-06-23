@@ -89,6 +89,7 @@ export interface LabelFilters {
   createdBy?: string;
   startDate?: Date;
   endDate?: Date;
+  status?: string;
   page?: number;
   limit?: number;
 }
@@ -175,6 +176,7 @@ export interface IUserRepository {
 export interface ILabelRepository {
   findAll(filters: LabelFilters): Promise<{ labels: LabelEntity[]; total: number }>;
   findById(id: string): Promise<LabelEntity | null>;
+  findByCompany(companyId: string): Promise<LabelEntity[]>;
   create(data: CreateLabelData): Promise<LabelEntity>;
   update(id: string, data: UpdateLabelData): Promise<LabelEntity>;
   delete(id: string): Promise<void>;

@@ -14,4 +14,9 @@ export class PickerController {
     );
     sendSuccess(res, result);
   });
+
+  getPendingDispatch = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.pickerService.getPendingDispatchLabels(req.user!);
+    sendSuccess(res, result);
+  });
 }

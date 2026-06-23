@@ -36,6 +36,10 @@ export class TenantGuard {
     TenantGuard.assertRole(user, [Role.SUPER_ADMIN]);
   }
 
+  static assertCanViewLabels(user: TokenPayload): void {
+    TenantGuard.assertRole(user, [Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR, Role.PICKER]);
+  }
+
   static assertCanManageLabels(user: TokenPayload): void {
     TenantGuard.assertRole(user, [Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR]);
   }

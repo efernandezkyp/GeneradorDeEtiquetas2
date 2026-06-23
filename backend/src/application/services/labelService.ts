@@ -136,7 +136,7 @@ export class LabelService {
   ) {}
 
   async findAll(filters: LabelFiltersDto, user: TokenPayload) {
-    TenantGuard.assertCanManageLabels(user);
+    TenantGuard.assertCanViewLabels(user);
 
     const companyId = TenantGuard.getCompanyFilter(user);
     const result = await this.labelRepository.findAll({
@@ -174,7 +174,7 @@ export class LabelService {
   }
 
   async findById(id: string, user: TokenPayload) {
-    TenantGuard.assertCanManageLabels(user);
+    TenantGuard.assertCanViewLabels(user);
 
     const label = await this.labelRepository.findById(id);
     if (!label) throw new NotFoundError('Etiqueta no encontrada');
