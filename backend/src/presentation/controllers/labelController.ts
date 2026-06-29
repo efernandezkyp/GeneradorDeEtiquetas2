@@ -60,6 +60,11 @@ export class LabelController {
     sendSuccess(res, { message: 'Etiqueta eliminada correctamente' });
   });
 
+  bulkDelete = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.labelService.bulkDelete(req.body.ids, req.user!, getClientIp(req));
+    sendSuccess(res, result);
+  });
+
   duplicate = asyncHandler(async (req: Request, res: Response) => {
     const label = await this.labelService.duplicate(this.getId(req), req.user!, getClientIp(req));
     sendSuccess(res, label, 201);

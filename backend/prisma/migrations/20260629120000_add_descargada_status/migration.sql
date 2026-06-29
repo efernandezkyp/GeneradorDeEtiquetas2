@@ -1,6 +1,3 @@
--- AlterEnum
-ALTER TYPE "LabelStatus" ADD VALUE 'DESCARGADA';
-
 -- DataMigration: etiquetas PENDIENTE que ya fueron descargadas pasan a DESCARGADA
 UPDATE "labels"
 SET "status" = 'DESCARGADA'::"LabelStatus"

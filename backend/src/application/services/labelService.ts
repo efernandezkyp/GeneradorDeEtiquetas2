@@ -145,6 +145,7 @@ export class LabelService {
       externalReference: filters.externalReference,
       receiver: filters.receiver,
       createdBy: filters.createdBy,
+      status: filters.status,
       startDate: filters.startDate ? new Date(filters.startDate) : undefined,
       endDate: filters.endDate ? new Date(filters.endDate) : undefined,
       page: filters.page,
@@ -330,6 +331,50 @@ export class LabelService {
       },
       ipAddress,
     });
+  }
+
+  async bulkDelete(ids: string[], user: TokenPayload, ipAddress?: string) {
+    TenantGuard.assertCanManageLabels(user);
+
+    let deleted = 0;
+    const failed: Array<{ id: string; message: string }> = [];
+
+    for (const id of ids) {
+      try {
+        const existing = await this.labelRepository.findById(id);
+        if (!existing) {
+          failed.push({ id, message: 'Etiqueta no encontrada' });
+          continue;
+        }
+
+        try {
+          TenantGuard.assertCompanyAccess(user, existing.companyId);
+        } catch {
+          failed.push({ id, message: 'Acceso denegado' });
+          continue;
+        }
+
+        await this.labelRepository.delete(id);
+
+        await this.labelHistoryRepository.createEvent({
+          labelId: id,
+          companyId: existing.companyId,
+          userId: user.userId,
+          eventType: 'DELETE',
+          summary: 'Etiqueta eliminada',
+          metadata: {
+            snapshot: buildLabelSnapshot(existing, parseProducts(existing)),
+          },
+          ipAddress,
+        });
+
+        deleted += 1;
+      } catch {
+        failed.push({ id, message: 'Error al eliminar' });
+      }
+    }
+
+    return { deleted, failed };
   }
 
   async duplicate(id: string, user: TokenPayload, ipAddress?: string) {

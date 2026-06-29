@@ -5,6 +5,12 @@ import {
   CardContent,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -24,6 +30,7 @@ import { downloadBlobFile, downloadTextFile, printText } from '../../../shared/u
 import { LabelZplDialog } from '../components/LabelZplDialog';
 import {
   bulkCreateLabels,
+  bulkDeleteLabels,
   deleteLabel,
   downloadLabelZplWithMeta,
   duplicateLabel,
@@ -93,6 +100,7 @@ export function LabelsPage() {
     externalReference: '',
     receiver: '',
     createdBy: '',
+    status: '',
     startDate: '',
     endDate: '',
   });
@@ -108,6 +116,15 @@ export function LabelsPage() {
     skipped: Array<{ index: number; message: string }>;
   } | null>(null);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; labelId: string | null; labelRef: string }>({
+    open: false,
+    labelId: null,
+    labelRef: '',
+  });
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState<{ open: boolean; count: number }>({
+    open: false,
+    count: 0,
+  });
 
   const labelsQuery = useQuery({
     queryKey: ['labels', filters],
@@ -123,6 +140,22 @@ export function LabelsPage() {
     },
     onError: () => {
       setPageError('No fue posible eliminar la etiqueta.');
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: bulkDeleteLabels,
+    onSuccess: async (result) => {
+      setPageError(null);
+      setSelectedLabelIds([]);
+      await queryClient.invalidateQueries({ queryKey: ['labels'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      if (result.failed.length > 0) {
+        setPageError(`${result.deleted} eliminadas, ${result.failed.length} fallaron.`);
+      }
+    },
+    onError: () => {
+      setPageError('No fue posible eliminar las etiquetas seleccionadas.');
     },
   });
 
@@ -411,6 +444,20 @@ export function LabelsPage() {
               }
             />
             <TextField
+              select
+              label="Estado"
+              value={filters.status}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, status: event.target.value }))
+              }
+              sx={{ minWidth: 160 }}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
+              <MenuItem value="DESCARGADA">Descargada</MenuItem>
+              <MenuItem value="DESPACHADA">Despachada</MenuItem>
+            </TextField>
+            <TextField
               label="Fecha desde"
               type="date"
               slotProps={{ inputLabel: { shrink: true } }}
@@ -444,9 +491,19 @@ export function LabelsPage() {
                 ? `${selectedRows.length} etiqueta${selectedRows.length === 1 ? '' : 's'} seleccionada${selectedRows.length === 1 ? '' : 's'}`
                 : 'Selecciona una o varias etiquetas para descargar un TXT consolidado'}
             </Typography>
-            <Button variant="outlined" disabled={selectedRows.length === 0} onClick={() => void handleBulkDownload()}>
-              Descargar seleccionadas
-            </Button>
+            <Stack direction="row" spacing={1}>
+              <Button variant="outlined" disabled={selectedRows.length === 0} onClick={() => void handleBulkDownload()}>
+                Descargar seleccionadas
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                disabled={selectedRows.length === 0}
+                onClick={() => setBulkDeleteConfirm({ open: true, count: selectedRows.length })}
+              >
+                Eliminar seleccionadas
+              </Button>
+            </Stack>
           </Stack>
 
           <Table>
@@ -554,7 +611,7 @@ export function LabelsPage() {
                         size="small"
                         color="error"
                         onClick={() => {
-                          void deleteMutation.mutateAsync(label.id);
+                          setDeleteConfirm({ open: true, labelId: label.id, labelRef: label.externalReference });
                         }}
                       >
                         Eliminar
@@ -592,6 +649,52 @@ export function LabelsPage() {
         }}
         onClose={() => setZplDialog({ open: false, labelId: null, zpl: '' })}
       />
+
+      <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, labelId: null, labelRef: '' })}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro de que deseas eliminar la etiqueta <strong>{deleteConfirm.labelRef}</strong>? Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm({ open: false, labelId: null, labelRef: '' })}>Cancelar</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              if (deleteConfirm.labelId) {
+                void deleteMutation.mutateAsync(deleteConfirm.labelId);
+              }
+              setDeleteConfirm({ open: false, labelId: null, labelRef: '' });
+            }}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={bulkDeleteConfirm.open} onClose={() => setBulkDeleteConfirm({ open: false, count: 0 })}>
+        <DialogTitle>Confirmar eliminación masiva</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro de que deseas eliminar <strong>{bulkDeleteConfirm.count}</strong> etiqueta{bulkDeleteConfirm.count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkDeleteConfirm({ open: false, count: 0 })}>Cancelar</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              void bulkDeleteMutation.mutateAsync(selectedLabelIds);
+              setBulkDeleteConfirm({ open: false, count: 0 });
+            }}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageSection>
   );
 }

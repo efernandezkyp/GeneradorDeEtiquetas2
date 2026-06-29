@@ -6,6 +6,7 @@ export interface LabelFiltersState {
   externalReference: string;
   receiver: string;
   createdBy: string;
+  status: string;
   startDate: string;
   endDate: string;
 }
@@ -15,6 +16,7 @@ export async function listLabels(filters: LabelFiltersState): Promise<PaginatedL
   if (filters.externalReference) params.append('externalReference', filters.externalReference);
   if (filters.receiver) params.append('receiver', filters.receiver);
   if (filters.createdBy) params.append('createdBy', filters.createdBy);
+  if (filters.status) params.append('status', filters.status);
   if (filters.startDate) params.append('startDate', new Date(filters.startDate).toISOString());
   if (filters.endDate) params.append('endDate', new Date(filters.endDate).toISOString());
   params.append('page', '1');
@@ -61,6 +63,11 @@ export async function previewLabel(payload: LabelFormValues): Promise<string> {
 
 export async function deleteLabel(id: string): Promise<void> {
   await httpClient.delete(`/labels/${id}`);
+}
+
+export async function bulkDeleteLabels(ids: string[]): Promise<{ deleted: number; failed: Array<{ id: string; message: string }> }> {
+  const response = await httpClient.post<ApiResponse<{ deleted: number; failed: Array<{ id: string; message: string }> }>>('/labels/bulk-delete', { ids });
+  return response.data.data;
 }
 
 export async function duplicateLabel(id: string): Promise<Label> {

@@ -85,6 +85,7 @@ export const labelFiltersSchema = z.object({
   externalReference: z.string().optional(),
   receiver: z.string().optional(),
   createdBy: z.string().optional(),
+  status: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   page: z.coerce.number().int().positive().optional(),
@@ -93,6 +94,10 @@ export const labelFiltersSchema = z.object({
 
 export const scanLabelSchema = z.object({
   qrData: z.string().min(1, 'Datos QR requeridos'),
+});
+
+export const bulkDeleteLabelsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, 'Debe enviar al menos un ID'),
 });
 
 export type LoginDto = z.infer<typeof loginSchema>;

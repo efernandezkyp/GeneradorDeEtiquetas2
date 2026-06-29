@@ -17,6 +17,7 @@ import {
   bulkCreateLabelsSchema,
   labelFiltersSchema,
   scanLabelSchema,
+  bulkDeleteLabelsSchema,
 } from '../../application/dto';
 
 const router = Router();
@@ -171,6 +172,13 @@ router.delete(
   authMiddleware,
   requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
   labelController.delete,
+);
+router.post(
+  '/labels/bulk-delete',
+  authMiddleware,
+  requireRoles(Role.SUPER_ADMIN, Role.ADMIN, Role.ASESOR),
+  validateBody(bulkDeleteLabelsSchema),
+  labelController.bulkDelete,
 );
 router.post(
   '/labels/:id/duplicate',
