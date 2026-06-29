@@ -65,6 +65,8 @@ export class PickerService {
       };
     }
 
+    const previousStatus = label.status;
+
     await this.labelRepository.update(parsed.id, {
       status: LabelStatus.DESPACHADA,
       scannedBy: user.userId,
@@ -81,7 +83,7 @@ export class PickerService {
         {
           field: 'status',
           label: 'Estado',
-          from: LabelStatus.PENDIENTE,
+          from: previousStatus,
           to: LabelStatus.DESPACHADA,
         },
       ],
@@ -98,7 +100,9 @@ export class PickerService {
 
   async getPendingDispatchLabels(user: TokenPayload) {
     const labels = await this.labelRepository.findByCompany(user.companyId);
-    const pending = labels.filter((l) => l.status === LabelStatus.PENDIENTE);
+    const pending = labels.filter(
+      (l) => l.status === LabelStatus.DESCARGADA || l.status === LabelStatus.PENDIENTE,
+    );
 
     if (pending.length === 0) {
       return { total: 0, labels: [] };
@@ -112,6 +116,7 @@ export class PickerService {
 
     const dispatched = pending
       .filter((l) => {
+        if (l.status === LabelStatus.DESCARGADA) return true;
         const summary = summaryMap.get(l.id);
         return summary && summary.downloadCount > 0;
       })

@@ -64,6 +64,27 @@ function parseProductsCell(value: string): LabelFormValues['products'] {
     .filter((item): item is { productName: string; quantity: number } => Boolean(item));
 }
 
+function renderStatusChip(status?: string, downloadCount?: number) {
+  if (status === 'DESPACHADA') {
+    return (
+      <Chip size="small" color="success" label="Despachada" variant="filled" />
+    );
+  }
+  if (status === 'DESCARGADA') {
+    return (
+      <Chip
+        size="small"
+        color="info"
+        label={`Descargada${downloadCount ? ` (${downloadCount})` : ''}`}
+        variant="filled"
+      />
+    );
+  }
+  return (
+    <Chip size="small" color="default" label="Pendiente" variant="outlined" />
+  );
+}
+
 export function LabelsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -443,7 +464,7 @@ export function LabelsPage() {
                 <TableCell>Motivo</TableCell>
                 <TableCell>Destinatario</TableCell>
                 <TableCell>Destino</TableCell>
-                <TableCell>Descarga</TableCell>
+                <TableCell>Estado</TableCell>
                 <TableCell>Creada</TableCell>
                 <TableCell align="right">Acciones</TableCell>
               </TableRow>
@@ -463,12 +484,7 @@ export function LabelsPage() {
                   <TableCell>{label.receiver}</TableCell>
                   <TableCell>{label.destinationCompany}</TableCell>
                   <TableCell>
-                    <Chip
-                      size="small"
-                      color={label.downloaded ? 'success' : 'default'}
-                      label={label.downloaded ? `Descargada${label.downloadCount ? ` (${label.downloadCount})` : ''}` : 'Pendiente'}
-                      variant={label.downloaded ? 'filled' : 'outlined'}
-                    />
+                    {renderStatusChip(label.status, label.downloadCount)}
                   </TableCell>
                   <TableCell>{new Date(label.createdAt).toLocaleString()}</TableCell>
                   <TableCell align="right">

@@ -115,7 +115,7 @@ export interface CreateLabelHistoryEventData {
   labelId: string;
   companyId: string;
   userId?: string;
-  eventType: 'CREATE' | 'UPDATE' | 'DELETE' | 'SCAN';
+  eventType: 'CREATE' | 'UPDATE' | 'DELETE' | 'SCAN' | 'DOWNLOAD';
   summary: string;
   changes?: LabelHistoryChange[];
   metadata?: Record<string, unknown>;

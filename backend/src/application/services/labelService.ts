@@ -8,6 +8,7 @@ import {
   LabelHistoryChange,
 } from '../../domain/interfaces';
 import { NotFoundError, ValidationError } from '../../domain/errors';
+import { LabelStatus } from '../../domain/enums';
 import { TenantGuard } from './tenantGuard';
 import { CreateLabelDto, UpdateLabelDto, LabelFiltersDto } from '../dto';
 import { LabelEntity } from '../../domain/entities';
@@ -371,6 +372,29 @@ export class LabelService {
       },
       ipAddress,
     });
+
+    if (label.status === LabelStatus.PENDIENTE) {
+      await this.labelRepository.update(id, {
+        status: LabelStatus.DESCARGADA,
+      });
+
+      await this.labelHistoryRepository.createEvent({
+        labelId: id,
+        companyId: label.companyId,
+        userId: user.userId,
+        eventType: 'DOWNLOAD',
+        summary: 'Etiqueta descargada',
+        changes: [
+          {
+            field: 'status',
+            label: 'Estado',
+            from: LabelStatus.PENDIENTE,
+            to: LabelStatus.DESCARGADA,
+          },
+        ],
+        ipAddress,
+      });
+    }
 
     const [summary] = await this.labelHistoryRepository.getLabelDownloadSummaries(
       [id],

@@ -1,5 +1,5 @@
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'ASESOR' | 'PICKER';
-export type LabelStatus = 'PENDIENTE' | 'DESPACHADA';
+export type LabelStatus = 'PENDIENTE' | 'DESCARGADA' | 'DESPACHADA';
 
 export interface ApiResponse<T> {
   success: boolean;

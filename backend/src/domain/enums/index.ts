@@ -7,6 +7,7 @@ export enum Role {
 
 export enum LabelStatus {
   PENDIENTE = 'PENDIENTE',
+  DESCARGADA = 'DESCARGADA',
   DESPACHADA = 'DESPACHADA',
 }
 

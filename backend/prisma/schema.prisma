@@ -18,6 +18,7 @@ enum Role {
 
 enum LabelStatus {
   PENDIENTE
+  DESCARGADA
   DESPACHADA
 }
 

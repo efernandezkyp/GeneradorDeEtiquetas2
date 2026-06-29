@@ -33,6 +33,27 @@ function formatDateTime(value?: string | null): string {
   return new Date(value).toLocaleString();
 }
 
+function renderStatusChip(status?: string, downloadCount?: number) {
+  if (status === 'DESPACHADA') {
+    return (
+      <Chip size="small" color="success" label="Despachada" variant="filled" />
+    );
+  }
+  if (status === 'DESCARGADA') {
+    return (
+      <Chip
+        size="small"
+        color="info"
+        label={`Descargada${downloadCount ? ` (${downloadCount})` : ''}`}
+        variant="filled"
+      />
+    );
+  }
+  return (
+    <Chip size="small" color="default" label="Pendiente" variant="outlined" />
+  );
+}
+
 function translateAction(action: string): string {
   switch (action) {
     case 'CREATE':
@@ -121,13 +142,8 @@ export function LabelDetailPage() {
               <Typography>{label.reason}</Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="subtitle2">Estado de descarga</Typography>
-              <Chip
-                size="small"
-                color={label.downloaded ? 'success' : 'default'}
-                label={label.downloaded ? `Descargada${label.downloadCount ? ` (${label.downloadCount})` : ''}` : 'Pendiente'}
-                variant={label.downloaded ? 'filled' : 'outlined'}
-              />
+              <Typography variant="subtitle2">Estado</Typography>
+              {renderStatusChip(label.status, label.downloadCount)}
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="subtitle2">Destinatario</Typography>
