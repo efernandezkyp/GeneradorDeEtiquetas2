@@ -38,6 +38,7 @@ export function PickerScanPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [alreadyDispatchedNotice, setAlreadyDispatchedNotice] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -99,6 +100,13 @@ export function PickerScanPage() {
             ...response.data,
             scannedAt: new Date().toLocaleTimeString('es-AR'),
           };
+
+          if (result.alreadyDispatched) {
+            setAlreadyDispatchedNotice(result.externalReference);
+            setTimeout(() => setAlreadyDispatchedNotice(null), 3500);
+            return;
+          }
+
           setScannedLabels((prev) => [result, ...prev]);
           addScanResult(result);
         })
@@ -569,6 +577,17 @@ export function PickerScanPage() {
       >
         <Alert severity="error" variant="filled" onClose={() => setScanError(null)}>
           {scanError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!alreadyDispatchedNotice}
+        autoHideDuration={3500}
+        onClose={() => setAlreadyDispatchedNotice(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="warning" variant="filled" onClose={() => setAlreadyDispatchedNotice(null)}>
+          {alreadyDispatchedNotice} ya fue despachada
         </Alert>
       </Snackbar>
     </Box>
